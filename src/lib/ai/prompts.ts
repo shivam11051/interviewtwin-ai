@@ -1,10 +1,11 @@
 import { InterviewType, Difficulty, Persona } from "@prisma/client";
 
-function sanitizeInput(value: string): string {
+function sanitizeInput(value: string, maxLength = 300): string {
   return value
-    .replace(/[<>]/g, "")
+    .replace(/[<>\\`]/g, "")
     .replace(/[\r\n]{3,}/g, "\n\n")
-    .slice(0, 200)
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
+    .slice(0, maxLength)
     .trim();
 }
 

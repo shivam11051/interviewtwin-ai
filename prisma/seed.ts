@@ -1,14 +1,4 @@
-import {
-  PrismaClient,
-  InterviewType,
-  Difficulty,
-  Persona,
-} from "@prisma/client";
-
-// Suppress unused variable warnings for imported enums used for type context
-void InterviewType;
-void Difficulty;
-void Persona;
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 

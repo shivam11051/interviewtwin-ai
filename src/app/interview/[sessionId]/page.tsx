@@ -300,7 +300,7 @@ export default function InterviewPage() {
           </div>
         </div>
         <Progress
-          value={((currentIndex) / Math.max(totalQuestions, 1)) * 100}
+          value={((currentIndex + 1) / Math.max(totalQuestions, 1)) * 100}
           className="h-1 rounded-none"
         />
       </div>
