@@ -1,0 +1,205 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts          Account[]
+  sessions          Session[]
+  interviewSessions InterviewSession[]
+  uploadedDocuments UploadedDocument[]
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+enum SessionStatus {
+  CREATED
+  READY
+  RUNNING
+  COMPLETED
+  SCORED
+}
+
+enum InterviewType {
+  BEHAVIORAL
+  TECHNICAL
+  MIXED
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum Persona {
+  FRIENDLY
+  STRICT
+  BAR_RAISER
+}
+
+enum DocumentType {
+  RESUME
+  JD
+}
+
+model InterviewSession {
+  id        String        @id @default(cuid())
+  userId    String
+  status    SessionStatus @default(CREATED)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  config    SessionConfig?
+  questions SessionQuestion[]
+  scorecard FinalScorecard?
+  documents UploadedDocument[]
+}
+
+model SessionConfig {
+  id            String        @id @default(cuid())
+  sessionId     String        @unique
+  company       String
+  role          String
+  level         String
+  interviewType InterviewType @default(BEHAVIORAL)
+  difficulty    Difficulty    @default(MEDIUM)
+  persona       Persona       @default(FRIENDLY)
+
+  session InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model SessionQuestion {
+  id           String @id @default(cuid())
+  sessionId    String
+  questionText String
+  questionType String
+  orderIndex   Int
+
+  session    InterviewSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  transcript AnswerTranscript?
+  evaluation AnswerEvaluation?
+}
+
+model AnswerTranscript {
+  id              String  @id @default(cuid())
+  questionId      String  @unique
+  rawText         String
+  processedText   String
+  durationSeconds Float?
+  audioUrl        String?
+
+  question SessionQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+model AnswerEvaluation {
+  id                String @id @default(cuid())
+  questionId        String @unique
+  clarityScore      Float
+  correctnessScore  Float
+  structureScore    Float
+  depthScore        Float
+  confidenceScore   Float
+  adaptabilityScore Float
+  overallScore      Float
+  feedback          String
+  improvements      String
+
+  question SessionQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+model FinalScorecard {
+  id                String   @id @default(cuid())
+  sessionId         String   @unique
+  overallScore      Float
+  clarityScore      Float
+  correctnessScore  Float
+  structureScore    Float
+  depthScore        Float
+  confidenceScore   Float
+  adaptabilityScore Float
+  summary           String
+  improvementPlan   String
+  generatedAt       DateTime @default(now())
+
+  session InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model RubricProfile {
+  id          String  @id @default(cuid())
+  name        String
+  description String
+  isDefault   Boolean @default(false)
+  weights     Json
+}
+
+model CompanyProfile {
+  id             String @id @default(cuid())
+  name           String @unique
+  description    String
+  interviewStyle String
+  commonTopics   Json
+}
+
+model UploadedDocument {
+  id         String       @id @default(cuid())
+  userId     String
+  sessionId  String?
+  type       DocumentType
+  filename   String
+  s3Key      String
+  s3Url      String
+  uploadedAt DateTime     @default(now())
+
+  user    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session InterviewSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+}
