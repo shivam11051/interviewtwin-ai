@@ -11,7 +11,7 @@ interface NavbarProps {
   userName?: string;
 }
 
-export function Navbar({ isAuthenticated, userName: _userName }: NavbarProps) {
+export function Navbar({ isAuthenticated, userName }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 
@@ -50,7 +50,7 @@ export function Navbar({ isAuthenticated, userName: _userName }: NavbarProps) {
             <>
               <Link href="/dashboard">
                 <Button variant="ghost" size="sm">
-                  Dashboard
+                  {userName ? `Hi, ${userName.split(" ")[0]}` : "Dashboard"}
                 </Button>
               </Link>
               <Link href="/api/auth/signout">

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import bcrypt from "bcryptjs";
 
 const SignUpSchema = z.object({
   name: z.string().min(1),
@@ -30,12 +31,13 @@ export async function POST(request: Request) {
     );
   }
 
-  // In production, hash the password before storing
-  // For MVP, we store without password (OAuth-first approach)
+  const passwordHash = await bcrypt.hash(parsed.data.password, 12);
+
   const user = await prisma.user.create({
     data: {
       name: parsed.data.name,
       email: parsed.data.email,
+      passwordHash,
     },
   });
 

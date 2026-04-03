@@ -1,5 +1,13 @@
 import { InterviewType, Difficulty, Persona } from "@prisma/client";
 
+function sanitizeInput(value: string): string {
+  return value
+    .replace(/[<>]/g, "")
+    .replace(/[\r\n]{3,}/g, "\n\n")
+    .slice(0, 200)
+    .trim();
+}
+
 export function getSystemPrompt(persona: Persona): string {
   const personas: Record<Persona, string> = {
     FRIENDLY:
@@ -22,7 +30,10 @@ export function getQuestionGenerationPrompt(config: {
   resumeText?: string;
   jdText?: string;
 }): string {
-  return `Generate ${config.numQuestions} interview questions for a ${config.level} ${config.role} position at ${config.company}.
+  const company = sanitizeInput(config.company);
+  const role = sanitizeInput(config.role);
+  const level = sanitizeInput(config.level);
+  return `Generate ${config.numQuestions} interview questions for a ${level} ${role} position at ${company}.
 
 Interview Type: ${config.interviewType}
 Difficulty: ${config.difficulty}
@@ -51,7 +62,10 @@ export function getEvaluationPrompt(
   questionType: string,
   config: { company: string; role: string; level: string }
 ): string {
-  return `Evaluate this interview answer for a ${config.level} ${config.role} position at ${config.company}.
+  const company = sanitizeInput(config.company);
+  const role = sanitizeInput(config.role);
+  const level = sanitizeInput(config.level);
+  return `Evaluate this interview answer for a ${level} ${role} position at ${company}.
 
 Question: ${questionText}
 Question Type: ${questionType}
@@ -113,7 +127,10 @@ export function getReportSynthesisPrompt(
   }>,
   config: { company: string; role: string; level: string }
 ): string {
-  return `Synthesize a final interview report for a ${config.level} ${config.role} candidate for ${config.company}.
+  const company = sanitizeInput(config.company);
+  const role = sanitizeInput(config.role);
+  const level = sanitizeInput(config.level);
+  return `Synthesize a final interview report for a ${level} ${role} candidate for ${company}.
 
 Overall Scores:
 - Clarity: ${scores.clarityScore}/10

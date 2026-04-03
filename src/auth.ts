@@ -4,6 +4,7 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import bcrypt from "bcryptjs";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -34,8 +35,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (!user || !user.email) return null;
 
-        // In production, use bcrypt to verify password
-        // For MVP, allow login with any password for demo accounts
+        // Require a stored password hash for credentials login
+        if (!user.passwordHash) return null;
+
+        const passwordMatch = await bcrypt.compare(
+          parsed.data.password,
+          user.passwordHash
+        );
+        if (!passwordMatch) return null;
+
         return {
           id: user.id,
           email: user.email,
